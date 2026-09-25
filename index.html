@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root{
     --paper:#F8F5FB;
@@ -101,19 +102,19 @@
 
   /* ---------- Toolbar ---------- */
   .toolbar{
-    display:flex; gap:10px; flex-wrap:wrap; align-items:center;
-    margin-bottom:16px;
+    display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+    margin-bottom:16px; font-size:12.5px;
   }
   .toolbar .search{flex:1 1 220px; position:relative;}
   .toolbar input[type=text].search-input{
-    width:100%; padding:9px 12px 9px 34px; border:1px solid var(--line);
-    border-radius:8px; background:var(--paper-raised);
+    width:100%; padding:8px 10px 8px 32px; border:1px solid var(--line);
+    border-radius:8px; background:var(--paper-raised); font-size:12.5px;
   }
-  .toolbar .search svg{position:absolute; left:11px; top:50%; transform:translateY(-50%); opacity:.45;}
+  .toolbar .search svg{position:absolute; left:10px; top:50%; transform:translateY(-50%); opacity:.45; width:14px; height:14px;}
   select.filter{
-    padding:9px 30px 9px 12px; border:1px solid var(--line); border-radius:8px;
-    background:var(--paper-raised) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235B6472'/%3E%3C/svg%3E") no-repeat right 12px center;
-    appearance:none; -webkit-appearance:none; min-width:0;
+    padding:8px 26px 8px 10px; border:1px solid var(--line); border-radius:8px;
+    background:var(--paper-raised) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235B6472'/%3E%3C/svg%3E") no-repeat right 10px center;
+    appearance:none; -webkit-appearance:none; min-width:0; font-size:12.5px;
   }
   .btn{
     padding:9px 16px; border-radius:8px; border:1px solid var(--wb-purple);
@@ -132,32 +133,38 @@
     border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;
     background:var(--paper-raised); overflow-x:auto;
   }
-  table{width:100%; border-collapse:collapse; table-layout:fixed;}
+  table{width:100%; min-width:1080px; border-collapse:collapse; table-layout:fixed;}
   thead th{
-    text-align:left; font-size:11px; letter-spacing:.06em; text-transform:uppercase;
-    color:var(--wb-purple-deep); font-weight:600; padding:11px 10px;
+    text-align:left; font-size:9px; letter-spacing:.01em; text-transform:uppercase;
+    color:var(--wb-purple-deep); font-weight:600; padding:8px 8px 8px 10px;
     border-bottom:1px solid var(--line); background:var(--wb-purple-soft);
-    white-space:normal; overflow-wrap:break-word;
+    white-space:normal; overflow-wrap:break-word; line-height:1.25;
+    border-right:1px solid var(--line);
   }
+  thead th:last-child{border-right:none;}
   tbody tr{border-bottom:1px solid var(--line-soft); transition:background .1s;}
   tbody tr:last-child{border-bottom:none;}
   tbody tr:hover{background:var(--wb-purple-soft); cursor:pointer;}
-  tbody td{padding:12px 10px; vertical-align:top; overflow-wrap:break-word; word-break:break-word;}
+  tbody td{padding:9px 8px 9px 10px; vertical-align:top; overflow-wrap:break-word; font-size:11px; border-right:1px solid var(--line-soft);}
+  tbody td:last-child{border-right:none;}
+  #bugTable tbody td:nth-child(2),
+  #bugTable tbody td:nth-child(3),
+  #bugTable tbody td:nth-child(12){ white-space:nowrap; }
 
-  .cat-badge{font-size:12px; font-weight:600;}
-  .subcat{display:block; font-size:12px; color:var(--ink-soft); margin-top:2px;}
+  .cat-badge{font-size:10.5px; font-weight:600;}
+  .subcat{display:block; font-size:10px; color:var(--ink-soft); margin-top:2px;}
 
-  .diff{font-size:13px; line-height:1.45;}
+  .diff{font-size:11px; line-height:1.4;}
   .diff .wrong{color:var(--red); text-decoration:line-through; text-decoration-color:#D8A8A0;}
   .diff .arrow{color:var(--ink-soft); margin:0 4px;}
   .diff .right{color:var(--green); font-weight:500;}
 
   .pill{
-    display:inline-flex; align-items:center; gap:5px;
-    padding:3px 9px; border-radius:20px; font-size:11.5px; font-weight:600;
-    border:1px solid transparent; white-space:normal; overflow-wrap:break-word; line-height:1.3;
+    display:inline-flex; align-items:center; gap:4px; max-width:100%; min-width:0; box-sizing:border-box;
+    padding:2px 7px; border-radius:20px; font-size:10px; font-weight:600;
+    border:1px solid transparent; white-space:normal; overflow-wrap:break-word; line-height:1.25;
   }
-  .pill::before{content:''; width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; margin-top:2px;}
+  .pill::before{content:''; width:5px; height:5px; border-radius:50%; background:currentColor; flex-shrink:0; margin-top:2px;}
 
   /* type (тип ошибки) colors */
   .ty-Лингвистическая{color:var(--blue); background:#EAF1F5;}
@@ -169,12 +176,12 @@
   .ty-Преференциальная{color:var(--slate); background:#F0F0EF;}
 
   .inline-select{
-    border:1px solid transparent; border-radius:20px; padding:4px 22px 4px 8px;
-    font-size:11.5px; font-weight:600; font-family:inherit; color:var(--ink-soft); background-color:#F0EFEA;
+    border:1px solid transparent; border-radius:20px; padding:3px 20px 3px 7px;
+    font-size:10.5px; font-weight:600; font-family:inherit; color:var(--ink-soft); background-color:#F0EFEA;
     appearance:none; -webkit-appearance:none; cursor:pointer; width:100%; max-width:100%;
     text-overflow:ellipsis;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6'%3E%3Cpath d='M0 0l4.5 6 4.5-6z' fill='%235B6472'/%3E%3C/svg%3E");
-    background-repeat:no-repeat; background-position:right 7px center;
+    background-repeat:no-repeat; background-position:right 6px center;
   }
   .inline-select:hover{border-color:var(--line);}
   .inline-select:disabled{opacity:.5; cursor:wait;}
@@ -195,17 +202,18 @@
   .stp-Исправление_не_требуется{color:var(--slate); background-color:#F0EFEA;}
   .stp-Убрали_с_прода{color:var(--violet); background-color:#EFEAF7;}
 
-  .comment-cell{color:var(--ink-soft); font-size:12.5px;}
-  .loc-cell{font-size:12.5px; color:var(--ink-soft);}
-  .assignee-cell{font-size:12.5px;}
-  .assignee-cell .comp-link{display:block; margin-top:2px; font-size:11.5px; color:var(--wb-purple);}
+  .comment-cell{color:var(--ink-soft); font-size:11px;}
+  .loc-cell{font-size:11px; color:var(--ink-soft);}
+  .assignee-cell{font-size:11px;}
+  .assignee-cell .comp-link{display:block; margin-top:2px; font-size:10.5px; color:var(--wb-purple);}
 
-  .row-actions{display:flex; gap:6px;}
+  .row-actions{display:flex; gap:6px; justify-content:center;}
   .icon-btn{
-    width:26px; height:26px; border-radius:6px; border:1px solid var(--line);
-    background:var(--paper-raised); display:flex; align-items:center; justify-content:center;
+    width:22px; height:22px; border-radius:6px; border:1px solid var(--line); padding:0; flex-shrink:0;
+    background:var(--paper-raised); display:flex; align-items:center; justify-content:center; color:var(--wb-purple);
   }
-  .icon-btn:hover{background:var(--paper);}
+  .icon-btn:hover{background:var(--wb-purple-soft); border-color:var(--wb-purple);}
+  .icon-btn svg{width:13px; height:13px; flex-shrink:0;}
 
   .thumb{width:32px; height:32px; border-radius:6px; object-fit:cover; border:1px solid var(--line);}
 
@@ -236,6 +244,11 @@
     background:var(--paper);
   }
   .field textarea{resize:vertical; min-height:52px;}
+  .field.field-invalid input[type=text], .field.field-invalid select, .field.field-invalid textarea{
+    border-color:var(--red-deep); background:#FBEEEC;
+  }
+  .field.field-invalid label{color:var(--red-deep);}
+  .shot-zone.invalid{border-color:var(--red-deep); background:#FBEEEC;}
   .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
   .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;}
   @media(max-width:560px){.grid2,.grid3{grid-template-columns:1fr;}}
@@ -263,6 +276,46 @@
   .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
   .footer-note{margin-top:28px; font-size:12px; color:var(--ink-soft); text-align:center;}
+
+  /* ---------- Custom tooltip (вместо нативного title) ---------- */
+  .custom-tooltip{
+    display:none; position:fixed; z-index:200; max-width:320px;
+    background:var(--ink); color:#fff; font-size:12px; line-height:1.5;
+    padding:9px 12px; border-radius:8px; box-shadow:0 10px 28px rgba(31,39,51,.3);
+    pointer-events:none; white-space:pre-wrap; overflow-wrap:break-word;
+  }
+  [data-tooltip]{cursor:help;}
+
+  /* ---------- Bulk actions bar ---------- */
+  .bulk-bar{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    background:var(--wb-purple-soft); border:1px solid var(--wb-purple);
+    border-radius:8px; padding:10px 14px; margin-bottom:12px;
+  }
+  .bulk-count{font-weight:700; font-size:13px; color:var(--wb-purple-deep); white-space:nowrap;}
+  .bulk-bar select.filter{background-color:var(--paper-raised);}
+  .row-select-cb, #selectAllCb{width:15px; height:15px; cursor:pointer;}
+
+  /* ---------- Pagination ---------- */
+  .pagination-bar{
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;
+    gap:10px; padding:14px 16px; border-top:1px solid var(--line); background:var(--paper-raised);
+  }
+  .pagination-info{font-size:12px; color:var(--ink-soft);}
+  .pagination-controls{display:flex; align-items:center; gap:8px;}
+  #pageIndicator{font-size:12px; color:var(--ink-soft); min-width:52px; text-align:center;}
+  .pagination-controls .btn:disabled{opacity:.4; cursor:not-allowed;}
+
+  /* ---------- Settings modal (языки/разделы) ---------- */
+  #settingsLangList{max-height:52vh; overflow-y:auto; padding-right:4px; margin-bottom:4px;}
+  .settings-lang-row{border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin-bottom:8px; background:var(--paper);}
+  .settings-lang-toggle{display:flex; align-items:center; gap:8px; font-weight:600; font-size:13.5px; cursor:pointer;}
+  .settings-lang-toggle input{width:auto;}
+  .settings-sections{margin-top:8px;}
+  .settings-sections summary{font-size:12px; color:var(--ink-soft); cursor:pointer; user-select:none;}
+  .settings-sections-grid{display:grid; grid-template-columns:1fr 1fr; gap:5px 12px; margin-top:8px; font-size:12.5px;}
+  .settings-sections-grid label{display:flex; align-items:center; gap:6px; font-weight:400; text-transform:none; letter-spacing:0;}
+  .settings-sections-grid input{width:auto;}
 </style>
 </head>
 <body>
@@ -282,6 +335,7 @@
       <button class="btn ghost small" id="sheetLinkBtn" style="display:none;"><a id="sheetLinkAnchor" href="#" target="_blank">Google-таблица</a></button>
       <button class="btn ghost small" id="importBtn">Импорт</button>
       <button class="btn ghost small" id="exportBtn">Экспорт в CSV</button>
+      <button class="btn ghost small" id="settingsBtn">⚙ Языки и разделы</button>
       <button class="btn" id="newBugBtn">+ Новая правка</button>
     </div>
   </header>
@@ -293,7 +347,7 @@
   <div class="toolbar">
     <div class="search">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" class="search-input" id="searchInput" placeholder="Поиск по разделу, тексту, комментарию…">
+      <input type="text" class="search-input" id="searchInput" placeholder="Поиск по номеру, тексту…">
     </div>
     <select class="filter" id="fLanguage"><option value="">Любой язык</option></select>
     <select class="filter" id="fSection"><option value="">Все разделы</option></select>
@@ -301,36 +355,56 @@
     <select class="filter" id="fStatusWeblate"><option value="">Статус: Weblate — любой</option></select>
     <select class="filter" id="fStatusProd"><option value="">Статус: прод — любой</option></select>
     <select class="filter" id="fAssignee"><option value="">Любой ответственный</option></select>
+    <select class="filter" id="fZhanna">
+      <option value="">Комментарии…</option>
+      <option value="yes">Есть комментарии</option>
+      <option value="no">Нет комментариев</option>
+    </select>
     <select class="filter" id="fSort">
       <option value="new">Сначала новые</option>
       <option value="old">Сначала старые</option>
     </select>
   </div>
 
+  <div class="bulk-bar" id="bulkBar" style="display:none;">
+    <span id="bulkCount" class="bulk-count"></span>
+    <select class="filter" id="bulkStatusWeblate"></select>
+    <select class="filter" id="bulkStatusProd"></select>
+    <button type="button" class="btn small" id="bulkApplyBtn">Применить статус</button>
+    <button type="button" class="btn danger small" id="bulkDeleteBtn">Удалить выбранные</button>
+    <button type="button" class="btn ghost small" id="bulkClearBtn">Снять выделение</button>
+  </div>
+
   <div class="table-shell">
     <table id="bugTable">
       <colgroup>
+        <col style="width:3%">
+        <col style="width:4%">
         <col style="width:8%">
+        <col style="width:9%">
+        <col style="width:9%">
         <col style="width:10%">
-        <col style="width:14%">
-        <col style="width:20%">
-        <col style="width:11%">
-        <col style="width:8%">
-        <col style="width:8%">
-        <col style="width:12%">
+        <col style="width:9%">
+        <col style="width:9%">
+        <col style="width:9%">
+        <col style="width:10%">
+        <col style="width:9%">
         <col style="width:7%">
-        <col style="width:2%">
+        <col style="width:4%">
       </colgroup>
       <thead>
         <tr>
+          <th><input type="checkbox" id="selectAllCb" title="Выбрать все на странице"></th>
+          <th>№</th>
           <th>Язык</th>
           <th>Раздел</th>
           <th>Тип ошибки</th>
-          <th>Как сейчас → как должно быть</th>
+          <th>Было → Стало</th>
           <th>Ответственный</th>
           <th>Weblate</th>
           <th>Прод</th>
           <th>Пояснение</th>
+          <th>Комментарии</th>
           <th>Дата</th>
           <th></th>
         </tr>
@@ -341,6 +415,15 @@
       <h3>Пока ничего не найдено</h3>
       <p>Заведите первую правку — она сразу попадёт в статистику и общий список.</p>
       <button class="btn" id="emptyAddBtn">+ Новая правка</button>
+    </div>
+    <div class="pagination-bar" id="paginationBar" style="display:none;">
+      <div class="pagination-info" id="paginationInfo"></div>
+      <div class="pagination-controls">
+        <button type="button" class="btn ghost small" id="pagePrevBtn">← Назад</button>
+        <span id="pageIndicator" class="mono"></span>
+        <button type="button" class="btn ghost small" id="pageNextBtn">Вперёд →</button>
+        <button type="button" class="btn ghost small" id="toggleShowAllBtn">Показать все</button>
+      </div>
     </div>
   </div>
 </div>
@@ -355,39 +438,39 @@
     <form id="bugForm">
       <div class="grid2">
         <div class="field">
-          <label>Язык</label>
+          <label>Язык *</label>
           <select id="fldLanguage" required></select>
         </div>
         <div class="field">
-          <label>Раздел сайта</label>
+          <label>Раздел сайта *</label>
           <select id="fldSection" required></select>
         </div>
       </div>
 
       <div class="field">
-        <label>Подраздел</label>
-        <input type="text" id="fldSubsection" placeholder="Например: Меню, Чаты, Виджет баланса…">
+        <label>Подраздел *</label>
+        <input type="text" id="fldSubsection" required placeholder="Конкретное место внутри раздела. Например: Карточка товара, Мои бренды…">
       </div>
 
       <div class="field">
-        <label>Тип ошибки</label>
+        <label>Тип ошибки *</label>
         <select id="fldType" required></select>
         <div class="type-hint" id="typeHint"></div>
       </div>
 
       <div class="grid2">
         <div class="field">
-          <label>Как сейчас</label>
-          <textarea id="fldWrong"></textarea>
+          <label>Как сейчас *</label>
+          <textarea id="fldWrong" required></textarea>
         </div>
         <div class="field">
-          <label>Как должно быть</label>
-          <textarea id="fldRight"></textarea>
+          <label>Как должно быть *</label>
+          <textarea id="fldRight" required></textarea>
         </div>
       </div>
 
       <div class="field">
-        <label>Скриншот</label>
+        <label>Скриншот *</label>
         <div class="shot-zone" id="shotZone">
           <div id="shotPlaceholder">Нажмите, чтобы выбрать файл, или вставьте скриншот из буфера (Ctrl+V)</div>
           <img id="shotPreview" style="display:none;">
@@ -407,7 +490,7 @@
           <input type="text" id="fldAssignee" placeholder="Имя Фамилия / @ник">
         </div>
         <div class="field">
-          <label>Ссылка на компонент (Weblate)</label>
+          <label>Ссылка на основной компонент</label>
           <input type="text" id="fldComponentLink" placeholder="https://weblate.wb.ru/projects/seller-portal/…">
         </div>
       </div>
@@ -424,8 +507,8 @@
       </div>
 
       <div class="field">
-        <label>Комментарии от Жанны</label>
-        <textarea id="fldZhanna" placeholder="Необязательно — заполняется при ревью"></textarea>
+        <label>Комментарии</label>
+        <textarea id="fldZhanna" placeholder="Заполняет Жанна"></textarea>
       </div>
 
       <div class="modal-actions">
@@ -472,7 +555,7 @@
         <textarea id="importText" style="min-height:140px; font-family:'JetBrains Mono',monospace; font-size:12px;" placeholder="Вставьте сюда строки, скопированные из таблицы (Ctrl+C / Ctrl+V) — колонки через Tab, как в исходном файле"></textarea>
       </div>
       <p style="font-size:11.5px; color:var(--ink-soft); line-height:1.5; margin:8px 0 0;">
-        Ожидаемый порядок колонок: Раздел сайта → Подраздел → Скриншот (ссылка) → Тип ошибки → Как сейчас → Как должно быть → Пояснение к правке → Ответственный → Ссылка на компонент → Статус по Weblate → Статус по проду → Комментарии от Жанны
+        Ожидаемый порядок колонок: Раздел сайта → Подраздел → Скриншот (ссылка) → Тип ошибки → Как сейчас → Как должно быть → Пояснение к правке → Ответственный → Ссылка на основной компонент → Статус по Weblate → Статус по проду → Комментарии
       </p>
     </div>
     <div class="modal-actions">
@@ -489,11 +572,55 @@
   <img id="lightboxImg" style="max-width:100%; max-height:90vh; border-radius:10px; margin:auto;">
 </div>
 
+<div class="custom-tooltip" id="customTooltip"></div>
+
+<!-- Settings modal: языки и разделы -->
+<div class="overlay" id="settingsOverlay">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-head">
+      <h2>Языки и разделы</h2>
+      <button class="close-x" id="closeSettingsModal">✕</button>
+    </div>
+    <p style="font-size:12.5px; color:var(--ink-soft); margin:0 0 14px; line-height:1.5;">
+      По умолчанию у каждого языка включены все разделы. Если для какого-то языка актуальны не все —
+      просто снимите лишние галочки. Отключённый язык пропадает из формы «Новая правка» и импорта,
+      но старые правки по нему остаются видны и доступны в фильтре.
+    </p>
+    <div id="settingsLangList"></div>
+    <div class="modal-actions">
+      <div id="settingsSaveStatus" style="font-size:12.5px; color:var(--ink-soft);"></div>
+      <div style="display:flex; gap:10px; margin-left:auto;">
+        <button type="button" class="btn ghost" id="settingsCancelBtn">Отмена</button>
+        <button type="button" class="btn" id="settingsSaveBtn">Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ---------------- Reference data (портал продавца, по чек-листу «Правки») ---------------- */
-const LANGUAGES = ["Русский","Английский","Азербайджанский","Амхарский","Грузинский","Казахский","Узбекский","Киргизский","Армянский","Таджикский"];
+/* ---------------- Настройка языков и разделов (пункт 5 фидбека) ----------------
+   Редактируется прямо здесь, без изменения остального кода.
+   enabled: false — язык скрывается из всех выпадающих списков и фильтров.
+   sections: [] — список разделов, доступных для этого языка (по названиям из ALL_SECTIONS ниже).
+                  Если оставить пустой массив [] — будут доступны ВСЕ разделы из ALL_SECTIONS. */
+const ALL_SECTIONS = ["Ленд входа","Ленд «О портале»","Главная","Новости","Настройки","Документы","Оферты","Рост продаж","Товары и цены","Поставки и заказы","Аналитика","Финансы","Уведомления","Поддержка","История платежей","Управление остатками"];
 
-const SECTIONS = ["Ленд входа","Ленд «О портале»","Главная","Новости","Настройки","Документы","Оферты","Рост продаж","Товары и цены","Поставки и заказы","Аналитика","Финансы","Уведомления","Поддержка","История платежей","Управление остатками"];
+const LANGUAGE_CONFIG_DEFAULT = {};
+["Русский","Английский","Азербайджанский","Амхарский","Грузинский","Казахский","Узбекский","Армянский","Таджикский"].forEach(lang=>{
+  LANGUAGE_CONFIG_DEFAULT[lang] = { enabled: true, sections: [...ALL_SECTIONS] };
+});
+
+let LANGUAGE_CONFIG = JSON.parse(JSON.stringify(LANGUAGE_CONFIG_DEFAULT));
+
+function getLanguages(){ return Object.keys(LANGUAGE_CONFIG).filter(l => LANGUAGE_CONFIG[l].enabled); }
+function getAllLanguageKeys(){ return Object.keys(LANGUAGE_CONFIG); }
+function sectionsForLanguage(lang){
+  const cfg = LANGUAGE_CONFIG[lang];
+  if(!cfg || !cfg.sections || !cfg.sections.length) return ALL_SECTIONS;
+  return cfg.sections;
+}
+const SECTIONS = ALL_SECTIONS;
 
 const TYPES = ["Лингвистическая","Отсутствие перевода","Несоответствие глоссарию","Смысловая","Техническая","Продуктовая","Преференциальная"];
 const TYPE_HINTS = {
@@ -508,6 +635,16 @@ const TYPE_HINTS = {
 
 const STATUS_WEBLATE = ["Исправлено","Жду фидбека","Не исправлено","Исправление не требуется","Нельзя исправить","Не weblate"];
 const STATUS_PROD = ["Исправлено","Не исправлено","Исправление не требуется","Убрали с прода"];
+// Короткие подписи только для компактных селектов в самой таблице (в модалке и фильтрах — полный текст)
+const STATUS_SHORT = {
+  "Исправлено": "Исправлено",
+  "Жду фидбека": "Жду фидбека",
+  "Не исправлено": "Не исправлено",
+  "Исправление не требуется": "Не требуется",
+  "Нельзя исправить": "Нельзя испр.",
+  "Не weblate": "Не Weblate",
+  "Убрали с прода": "Убрали",
+};
 
 /* ---------------- State ---------------- */
 let bugs = [];
@@ -617,25 +754,82 @@ async function uploadScreenshot(id, dataUrl){
   }
 }
 
+/* ---------------- Конфиг языков/разделов: хранение (пункт из фидбека — настройка без правки кода) ----------------
+   Приоритет источников при загрузке: сервер (общий для всей команды) → локальный кэш этого браузера → значения по умолчанию из кода.
+   Если backend ещё не поддерживает action=getConfig/setConfig — тихо откатываемся на локальный кэш браузера,
+   ничего не ломая (см. saveLanguageConfig). Чтобы включить общее хранение на сервере, нужно добавить
+   пару веток в существующий Google Apps Script — см. инструкцию, которую я дал отдельно. */
+const CONFIG_LOCAL_KEY = 'sellerPortalLqaLangConfig_v1';
+
+function loadLocalConfig_(){
+  try{
+    const raw = localStorage.getItem(CONFIG_LOCAL_KEY);
+    if(!raw) return null;
+    const parsed = JSON.parse(raw);
+    return (parsed && typeof parsed === 'object') ? parsed : null;
+  }catch(e){ return null; }
+}
+function saveLocalConfig_(cfg){
+  try{ localStorage.setItem(CONFIG_LOCAL_KEY, JSON.stringify(cfg)); }catch(e){}
+}
+function mergeConfig_(base, override){
+  const merged = {};
+  Object.keys(base).forEach(lang=>{
+    const o = override && override[lang];
+    merged[lang] = o
+      ? { enabled: !!o.enabled, sections: Array.isArray(o.sections) ? o.sections : [] }
+      : { ...base[lang] };
+  });
+  return merged;
+}
+async function loadRemoteConfig_(){
+  if(!endpointConfigured) return null;
+  try{
+    const sep = SHEETS_ENDPOINT.includes('?') ? '&' : '?';
+    const json = await fetchJson_(SHEETS_ENDPOINT + sep + 'action=getConfig');
+    if(json && json.ok && json.config && typeof json.config === 'object') return json.config;
+  }catch(e){ /* backend может ещё не поддерживать это действие — просто идём дальше */ }
+  return null;
+}
+async function saveRemoteConfig_(cfg){
+  if(!endpointConfigured) return false;
+  try{
+    const json = await fetchJson_(SHEETS_ENDPOINT, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify({action:'setConfig', config: cfg})
+    });
+    return !!(json && json.ok);
+  }catch(e){ return false; }
+}
+async function initLanguageConfig(){
+  const remote = await loadRemoteConfig_();
+  if(remote){ LANGUAGE_CONFIG = mergeConfig_(LANGUAGE_CONFIG_DEFAULT, remote); saveLocalConfig_(LANGUAGE_CONFIG); return; }
+  const local = loadLocalConfig_();
+  if(local){ LANGUAGE_CONFIG = mergeConfig_(LANGUAGE_CONFIG_DEFAULT, local); }
+}
+
 /* ---------------- Init selects ---------------- */
 function fillSelect(el, items, withEmptyLabel){
   el.innerHTML = (withEmptyLabel ? `<option value="">${withEmptyLabel}</option>` : '') +
     items.map(i => `<option value="${i}">${i}</option>`).join('');
 }
 function initStaticSelects(){
-  fillSelect($('#fLanguage'), LANGUAGES, 'Любой язык');
+  fillSelect($('#fLanguage'), getAllLanguageKeys(), 'Любой язык');
   fillSelect($('#fSection'), SECTIONS, 'Все разделы');
   fillSelect($('#fType'), TYPES, 'Любой тип ошибки');
   fillSelect($('#fStatusWeblate'), STATUS_WEBLATE, 'Статус: Weblate — любой');
   fillSelect($('#fStatusProd'), STATUS_PROD, 'Статус: прод — любой');
 
-  fillSelect($('#fldLanguage'), LANGUAGES, false);
-  fillSelect($('#fldSection'), SECTIONS, false);
+  fillSelect($('#fldLanguage'), getLanguages(), false);
+  fillSelect($('#fldSection'), sectionsForLanguage(getLanguages()[0]), false);
   fillSelect($('#fldType'), TYPES, false);
   fillSelect($('#fldStatusWeblate'), STATUS_WEBLATE, false);
   fillSelect($('#fldStatusProd'), STATUS_PROD, false);
 
-  fillSelect($('#importLanguage'), LANGUAGES, false);
+  fillSelect($('#importLanguage'), getLanguages(), false);
+  fillSelect($('#bulkStatusWeblate'), STATUS_WEBLATE, 'Weblate — не менять');
+  fillSelect($('#bulkStatusProd'), STATUS_PROD, 'Прод — не менять');
 
   if(/^https?:\/\//.test(SHEET_LINK)){
     $('#sheetLinkAnchor').href = SHEET_LINK;
@@ -646,16 +840,134 @@ function updateTypeHint(){
   const val = $('#fldType').value;
   $('#typeHint').textContent = TYPE_HINTS[val] || '';
 }
+function updateSectionOptions(keepValue){
+  const lang = $('#fldLanguage').value;
+  const prev = keepValue !== undefined ? keepValue : $('#fldSection').value;
+  fillSelect($('#fldSection'), sectionsForLanguage(lang), false);
+  if(prev && sectionsForLanguage(lang).includes(prev)) $('#fldSection').value = prev;
+}
+
+/* ---------------- Настройки: языки и разделы (модалка) ---------------- */
+let settingsDraft = null;
+
+function openSettingsModal(){
+  settingsDraft = JSON.parse(JSON.stringify(LANGUAGE_CONFIG));
+  renderSettingsModal();
+  $('#settingsSaveStatus').textContent = '';
+  $('#settingsOverlay').classList.add('open');
+}
+function closeSettingsModal(){ $('#settingsOverlay').classList.remove('open'); }
+
+function settingsSummaryText_(cfg){
+  const n = cfg.sections.length, total = ALL_SECTIONS.length;
+  if(n === total) return `Разделы: все (${total})`;
+  if(n === 0) return `Разделы: не выбраны — будут доступны все (${total})`;
+  return `Разделы: ${n} из ${total}`;
+}
+
+function renderSettingsModal(){
+  const langs = Object.keys(settingsDraft);
+  $('#settingsLangList').innerHTML = langs.map(lang=>{
+    const cfg = settingsDraft[lang];
+    return `
+      <div class="settings-lang-row">
+        <label class="settings-lang-toggle">
+          <input type="checkbox" class="settings-enabled-cb" data-lang="${escapeHtml(lang)}" ${cfg.enabled?'checked':''}>
+          <span>${escapeHtml(lang)}</span>
+        </label>
+        <details class="settings-sections">
+          <summary>${settingsSummaryText_(cfg)}</summary>
+          <div class="settings-sections-grid">
+            ${ALL_SECTIONS.map(s=>`<label><input type="checkbox" class="settings-section-cb" data-lang="${escapeHtml(lang)}" data-section="${escapeHtml(s)}" ${cfg.sections.includes(s)?'checked':''}> ${escapeHtml(s)}</label>`).join('')}
+          </div>
+        </details>
+      </div>`;
+  }).join('');
+
+  $('#settingsLangList').querySelectorAll('.settings-enabled-cb').forEach(cb=>{
+    cb.addEventListener('change', ()=>{ settingsDraft[cb.dataset.lang].enabled = cb.checked; });
+  });
+  $('#settingsLangList').querySelectorAll('.settings-section-cb').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      const lang = cb.dataset.lang, sec = cb.dataset.section;
+      const set = new Set(settingsDraft[lang].sections);
+      if(cb.checked) set.add(sec); else set.delete(sec);
+      settingsDraft[lang].sections = [...set];
+      cb.closest('details').querySelector('summary').textContent = settingsSummaryText_(settingsDraft[lang]);
+    });
+  });
+}
+
+function refreshLanguageDependentSelects(){
+  fillSelect($('#fLanguage'), getAllLanguageKeys(), 'Любой язык');
+  fillSelect($('#fldLanguage'), getLanguages(), false);
+  fillSelect($('#importLanguage'), getLanguages(), false);
+  updateSectionOptions();
+}
+
+async function saveSettings(){
+  $('#settingsSaveBtn').disabled = true;
+  $('#settingsSaveStatus').textContent = 'Сохраняю…';
+  LANGUAGE_CONFIG = settingsDraft;
+  saveLocalConfig_(LANGUAGE_CONFIG);
+  const remoteOk = await saveRemoteConfig_(LANGUAGE_CONFIG);
+  refreshLanguageDependentSelects();
+  render();
+  $('#settingsSaveBtn').disabled = false;
+  $('#settingsSaveStatus').textContent = '';
+  showToast(remoteOk ? 'Настройки сохранены для всей команды' : 'Сохранено только в этом браузере — сервер пока не поддерживает общее хранение настроек');
+  closeSettingsModal();
+}
 
 /* ---------------- Render ---------------- */
 function slug(s){ return String(s).replace(/[\s«»]+/g,'_').replace(/^_+|_+$/g,''); }
+
+/* ---------------- Множественный выбор + пагинация ---------------- */
+let selectedIds = new Set();
+let currentPage = 1;
+let showAllRows = false;
+const PAGE_SIZE = 50;
+
+function updateBulkBar(){
+  const bar = $('#bulkBar');
+  if(selectedIds.size === 0){ bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  $('#bulkCount').textContent = `Выбрано: ${selectedIds.size}`;
+}
+function updateSelectAllCbState(){
+  const cb = $('#selectAllCb');
+  const pageCbs = [...document.querySelectorAll('.row-select-cb')];
+  if(!pageCbs.length){ cb.checked = false; cb.indeterminate = false; return; }
+  const checkedCount = pageCbs.filter(c => selectedIds.has(c.dataset.id)).length;
+  cb.checked = checkedCount === pageCbs.length;
+  cb.indeterminate = checkedCount > 0 && checkedCount < pageCbs.length;
+}
+function renderPaginationBar(totalItems, totalPages){
+  const bar = $('#paginationBar');
+  if(totalItems <= PAGE_SIZE){ bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  if(showAllRows){
+    $('#paginationInfo').textContent = `Показаны все ${totalItems} правок`;
+    $('#pageIndicator').textContent = '';
+  } else {
+    const from = (currentPage-1)*PAGE_SIZE + 1;
+    const to = Math.min(currentPage*PAGE_SIZE, totalItems);
+    $('#paginationInfo').textContent = `Показано ${from}–${to} из ${totalItems}`;
+    $('#pageIndicator').textContent = `${currentPage} / ${totalPages}`;
+  }
+  $('#pagePrevBtn').disabled = showAllRows || currentPage <= 1;
+  $('#pageNextBtn').disabled = showAllRows || currentPage >= totalPages;
+  $('#toggleShowAllBtn').textContent = showAllRows ? 'Постранично' : 'Показать все';
+}
 
 function render(){
   renderStats();
   refreshAssigneeFilter();
   const q = $('#searchInput').value.trim().toLowerCase();
   const fl = $('#fLanguage').value, fsec = $('#fSection').value, ft = $('#fType').value,
-        fsw = $('#fStatusWeblate').value, fsp = $('#fStatusProd').value, fa = $('#fAssignee').value;
+        fsw = $('#fStatusWeblate').value, fsp = $('#fStatusProd').value, fa = $('#fAssignee').value,
+        fz = $('#fZhanna').value;
+  const qIsNum = /^\d+$/.test(q);
 
   const filtered = bugs.filter(b=>{
     if(fl && b.language !== fl) return false;
@@ -664,9 +976,15 @@ function render(){
     if(fsw && b.statusWeblate !== fsw) return false;
     if(fsp && b.statusProd !== fsp) return false;
     if(fa && b.assignee !== fa) return false;
+    if(fz === 'yes' && !(b.zhannaComment||'').trim()) return false;
+    if(fz === 'no' && (b.zhannaComment||'').trim()) return false;
     if(q){
-      const hay = [b.section,b.subsection,b.wrong,b.right,b.comment,b.zhannaComment,b.type,b.language,b.assignee].join(' ').toLowerCase();
-      if(!hay.includes(q)) return false;
+      if(qIsNum){
+        if(String(b.num||'') !== q) return false;
+      } else {
+        const hay = [b.section,b.subsection,b.wrong,b.right,b.comment,b.zhannaComment,b.type,b.language,b.assignee].join(' ').toLowerCase();
+        if(!hay.includes(q)) return false;
+      }
     }
     return true;
   }).sort((a,b)=> {
@@ -674,13 +992,23 @@ function render(){
     return $('#fSort').value === 'old' ? ca.localeCompare(cb) : cb.localeCompare(ca);
   });
 
-  tbody.innerHTML = '';
-  $('#emptyState').style.display = filtered.length ? 'none' : 'block';
-  $('#bugTable').style.display = filtered.length ? 'table' : 'none';
+  const totalItems = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+  if(currentPage > totalPages) currentPage = totalPages;
+  if(currentPage < 1) currentPage = 1;
+  const pageItems = showAllRows ? filtered : filtered.slice((currentPage-1)*PAGE_SIZE, currentPage*PAGE_SIZE);
 
-  filtered.forEach(b=>{
+  tbody.innerHTML = '';
+  $('#emptyState').style.display = totalItems ? 'none' : 'block';
+  $('#bugTable').style.display = totalItems ? 'table' : 'none';
+  renderPaginationBar(totalItems, totalPages);
+
+  pageItems.forEach(b=>{
     const tr = document.createElement('tr');
+    tr.id = 'issue-' + b.num;
     tr.innerHTML = `
+      <td><input type="checkbox" class="row-select-cb" data-id="${b.id}" ${selectedIds.has(b.id)?'checked':''}></td>
+      <td class="mono" style="font-weight:600; color:var(--wb-purple-deep);">#${escapeHtml(b.num||'—')}</td>
       <td><span class="cat-badge">${escapeHtml(b.language||'—')}</span></td>
       <td>
         <span class="cat-badge">${escapeHtml(b.section||'—')}</span>
@@ -700,14 +1028,22 @@ function render(){
       </td>
       <td>${inlineSelect('statusWeblate', b.id, STATUS_WEBLATE, b.statusWeblate, 'stw')}</td>
       <td>${inlineSelect('statusProd', b.id, STATUS_PROD, b.statusProd, 'stp')}</td>
-      <td class="comment-cell">${escapeHtml(truncate(b.comment,65))}</td>
+      <td class="comment-cell"${b.comment ? ` data-tooltip="${escapeHtml(b.comment)}"` : ''}>${escapeHtml(truncate(b.comment,65))}</td>
+      <td class="comment-cell"${b.zhannaComment ? ` data-tooltip="${escapeHtml(b.zhannaComment)}"` : ''}>${escapeHtml(truncate(b.zhannaComment,45))}</td>
       <td class="loc-cell mono">${formatDate(b.createdAt)}</td>
       <td>
         <div class="row-actions">
-          ${b.screenshotUrl ? `<button type="button" class="icon-btn shot-view" title="Посмотреть скриншот">📎</button>` : ''}
+          ${b.screenshotUrl ? `<button type="button" class="icon-btn shot-view" title="Посмотреть скриншот"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></button>` : ''}
         </div>
       </td>
     `;
+    const selectCb = tr.querySelector('.row-select-cb');
+    selectCb.addEventListener('click', ev => ev.stopPropagation());
+    selectCb.addEventListener('change', ()=>{
+      if(selectCb.checked) selectedIds.add(b.id); else selectedIds.delete(b.id);
+      updateBulkBar();
+      updateSelectAllCbState();
+    });
     const shotBtn = tr.querySelector('.shot-view');
     if(shotBtn){
       shotBtn.addEventListener('click', ev=>{
@@ -720,6 +1056,7 @@ function render(){
       sel.addEventListener('change', async ev=>{
         ev.stopPropagation();
         const field = sel.dataset.field;
+        const prefix = field === 'statusWeblate' ? 'stw' : 'stp';
         const prev = b[field];
         b[field] = sel.value;
         b.updatedAt = new Date().toISOString();
@@ -727,22 +1064,28 @@ function render(){
         const ok = await upsertBugRemote(b);
         sel.disabled = false;
         if(!ok){ b[field] = prev; sel.value = prev; return; }
+        sel.title = sel.value;
+        sel.className = `inline-select ${prefix}-pill ${prefix}-${slug(sel.value)}`;
         showToast('Сохранено');
         renderStats();
       });
     });
     tr.addEventListener('click', e=>{
-      if(e.target.closest('select') || e.target.closest('a')) return;
+      if(e.target.closest('select') || e.target.closest('a') || e.target.closest('input[type=checkbox]')) return;
       openEdit(b.id);
     });
     tbody.appendChild(tr);
   });
+
+  updateSelectAllCbState();
+  updateBulkBar();
 }
 function inlineSelect(field, id, options, selected, prefix){
-  const opts = options.map(o=>`<option value="${o}" ${o===selected?'selected':''}>${o}</option>`).join('');
+  const opts = options.map(o=>`<option value="${o}" ${o===selected?'selected':''}>${escapeHtml(STATUS_SHORT[o] || o)}</option>`).join('');
   const slugVal = selected ? slug(selected) : '';
   const cls = `inline-select ${prefix}-pill ${prefix}-${slugVal}`;
-  return `<select class="${cls}" data-field="${field}" data-id="${id}">${opts}</select>`;
+  const title = selected ? ` title="${escapeHtml(selected)}"` : '';
+  return `<select class="${cls}" data-field="${field}" data-id="${id}"${title}>${opts}</select>`;
 }
 function refreshAssigneeFilter(){
   const current = $('#fAssignee').value;
@@ -820,12 +1163,13 @@ function openNew(){
   $('#deleteBtn').style.display = 'none';
   $('#bugForm').reset();
   $('#fldLanguage').selectedIndex = 0;
-  $('#fldSection').selectedIndex = 0;
+  updateSectionOptions(null);
   $('#fldType').selectedIndex = 0;
-  $('#fldStatusWeblate').selectedIndex = 0;
-  $('#fldStatusProd').selectedIndex = 0;
+  $('#fldStatusWeblate').value = 'Не исправлено';
+  $('#fldStatusProd').value = 'Не исправлено';
   updateTypeHint();
   resetShotUI();
+  clearFieldErrors();
   $('#shotPlaceholder').textContent = 'Нажмите, чтобы выбрать файл, или вставьте скриншот из буфера (Ctrl+V)';
   $('#overlay').classList.add('open');
 }
@@ -838,8 +1182,8 @@ function openEdit(id){
   shotChanged = false;
   $('#modalTitle').textContent = 'Правка №' + b.num;
   $('#deleteBtn').style.display = 'inline-flex';
-  $('#fldLanguage').value = b.language||LANGUAGES[0];
-  $('#fldSection').value = b.section||SECTIONS[0];
+  $('#fldLanguage').value = b.language||getLanguages()[0];
+  updateSectionOptions(b.section);
   $('#fldSubsection').value = b.subsection||'';
   $('#fldType').value = b.type||TYPES[0];
   updateTypeHint();
@@ -852,6 +1196,7 @@ function openEdit(id){
   $('#fldStatusProd').value = b.statusProd||STATUS_PROD[0];
   $('#fldZhanna').value = b.zhannaComment||'';
   resetShotUI();
+  clearFieldErrors();
   if(existingScreenshotUrl){
     showShotPreview(existingScreenshotUrl);
   }
@@ -920,6 +1265,11 @@ $('#shotRemove').addEventListener('click', ()=>{ pendingShot=null; shotChanged=t
 $('#newBugBtn').addEventListener('click', openNew);
 $('#exportBtn').addEventListener('click', exportCsv);
 $('#importBtn').addEventListener('click', openImportModal);
+$('#settingsBtn').addEventListener('click', openSettingsModal);
+$('#closeSettingsModal').addEventListener('click', closeSettingsModal);
+$('#settingsCancelBtn').addEventListener('click', closeSettingsModal);
+$('#settingsOverlay').addEventListener('click', e=>{ if(e.target.id==='settingsOverlay') closeSettingsModal(); });
+$('#settingsSaveBtn').addEventListener('click', saveSettings);
 $('#toggleManualPaste').addEventListener('click', e=>{
   e.preventDefault();
   const block = $('#manualPasteBlock');
@@ -936,20 +1286,121 @@ $('#closeModal').addEventListener('click', closeModal);
 $('#cancelBtn').addEventListener('click', closeModal);
 $('#overlay').addEventListener('click', e=>{ if(e.target.id==='overlay') closeModal(); });
 $('#fldType').addEventListener('change', updateTypeHint);
-['#searchInput','#fLanguage','#fSection','#fType','#fStatusWeblate','#fStatusProd','#fAssignee','#fSort'].forEach(sel=>{
-  $(sel).addEventListener('input', render);
-  $(sel).addEventListener('change', render);
+$('#fldLanguage').addEventListener('change', ()=>updateSectionOptions());
+['#searchInput','#fLanguage','#fSection','#fType','#fStatusWeblate','#fStatusProd','#fAssignee','#fZhanna','#fSort'].forEach(sel=>{
+  $(sel).addEventListener('input', onFilterChange);
+  $(sel).addEventListener('change', onFilterChange);
 });
+function onFilterChange(){ currentPage = 1; render(); }
+
+/* ---------------- Массовый выбор и действия над несколькими правками ---------------- */
+$('#selectAllCb').addEventListener('change', e=>{
+  const checked = e.target.checked;
+  document.querySelectorAll('.row-select-cb').forEach(cb=>{
+    cb.checked = checked;
+    if(checked) selectedIds.add(cb.dataset.id); else selectedIds.delete(cb.dataset.id);
+  });
+  updateBulkBar();
+});
+$('#bulkClearBtn').addEventListener('click', ()=>{ selectedIds.clear(); render(); });
+
+async function bulkApplyStatus(){
+  const ids = [...selectedIds];
+  if(!ids.length) return;
+  const newWeblate = $('#bulkStatusWeblate').value;
+  const newProd = $('#bulkStatusProd').value;
+  if(!newWeblate && !newProd){ showToast('Выберите статус, который нужно проставить'); return; }
+  $('#bulkApplyBtn').disabled = true;
+  let ok = 0, fail = 0;
+  for(let i = 0; i < ids.length; i += 2){
+    const batch = ids.slice(i, i + 2);
+    const results = await Promise.all(batch.map(async id=>{
+      const bug = bugs.find(x=>x.id===id);
+      if(!bug) return false;
+      if(newWeblate) bug.statusWeblate = newWeblate;
+      if(newProd) bug.statusProd = newProd;
+      bug.updatedAt = new Date().toISOString();
+      return upsertBugRemote(bug);
+    }));
+    results.forEach(r => { if(r) ok++; else fail++; });
+    if(i + 2 < ids.length) await sleep_(300);
+  }
+  $('#bulkApplyBtn').disabled = false;
+  $('#bulkStatusWeblate').selectedIndex = 0;
+  $('#bulkStatusProd').selectedIndex = 0;
+  showToast(fail ? `Обновлено ${ok}, ${fail} с ошибкой` : `Статус обновлён у ${ok} правок`);
+  render();
+}
+async function bulkDelete(){
+  const ids = [...selectedIds];
+  if(!ids.length) return;
+  if(!confirm(`Удалить ${ids.length} правок без возможности восстановления?`)) return;
+  $('#bulkDeleteBtn').disabled = true;
+  let ok = 0, fail = 0;
+  for(let i = 0; i < ids.length; i += 2){
+    const batch = ids.slice(i, i + 2);
+    const results = await Promise.all(batch.map(id => deleteBugRemote(id)));
+    results.forEach((success, idx)=>{
+      if(success){ bugs = bugs.filter(b=>b.id!==batch[idx]); selectedIds.delete(batch[idx]); ok++; }
+      else fail++;
+    });
+    if(i + 2 < ids.length) await sleep_(300);
+  }
+  $('#bulkDeleteBtn').disabled = false;
+  showToast(fail ? `Удалено ${ok}, ${fail} с ошибкой` : `Удалено ${ok} правок`);
+  render();
+}
+$('#bulkApplyBtn').addEventListener('click', bulkApplyStatus);
+$('#bulkDeleteBtn').addEventListener('click', bulkDelete);
+
+/* ---------------- Пагинация ---------------- */
+$('#pagePrevBtn').addEventListener('click', ()=>{ if(currentPage > 1){ currentPage--; render(); } });
+$('#pageNextBtn').addEventListener('click', ()=>{ currentPage++; render(); });
+$('#toggleShowAllBtn').addEventListener('click', ()=>{ showAllRows = !showAllRows; currentPage = 1; render(); });
+
+
+/* ---------------- Validation (пункт 7 фидбека) ---------------- */
+function clearFieldErrors(){
+  document.querySelectorAll('#bugForm .field.field-invalid').forEach(f=>f.classList.remove('field-invalid'));
+  $('#shotZone').classList.remove('invalid');
+}
+function validateForm(){
+  clearFieldErrors();
+  let firstInvalid = null;
+  const requiredEls = ['#fldLanguage','#fldSection','#fldSubsection','#fldType','#fldWrong','#fldRight'];
+  requiredEls.forEach(sel=>{
+    const el = $(sel);
+    if(!el.value || !el.value.trim()){
+      el.closest('.field').classList.add('field-invalid');
+      if(!firstInvalid) firstInvalid = el;
+    }
+  });
+  const hasShot = existingScreenshotUrl || pendingShot;
+  if(!hasShot){
+    $('#shotZone').classList.add('invalid');
+    if(!firstInvalid) firstInvalid = $('#shotZone');
+  }
+  if(firstInvalid){
+    firstInvalid.scrollIntoView({block:'center', behavior:'smooth'});
+    showToast('Заполните обязательные поля, выделенные красным');
+    return false;
+  }
+  return true;
+}
 
 $('#bugForm').addEventListener('submit', async e=>{
   e.preventDefault();
   if(!endpointConfigured){ showToast('Хранилище не настроено — вставьте ссылку в SHEETS_ENDPOINT'); return; }
 
+  const isNew = !editingId;
+  // Обязательные поля (пункт 7 фидбека) — жёстко проверяем при создании новой правки;
+  // при редактировании уже существующей записи не блокируем сохранение из-за старых незаполненных полей.
+  if(isNew && !validateForm()) return;
+
   const saveBtn = $('#saveBtn');
   saveBtn.disabled = true; saveBtn.textContent = 'Сохранение…';
 
   const id = editingId || ('b'+Date.now()+Math.random().toString(36).slice(2,7));
-  const isNew = !editingId;
   const existing = isNew ? null : bugs.find(b=>b.id===id);
 
   let finalUrl = existingScreenshotUrl;
@@ -999,6 +1450,7 @@ $('#deleteBtn').addEventListener('click', async ()=>{
   const ok = await deleteBugRemote(editingId);
   if(!ok) return;
   bugs = bugs.filter(b=>b.id!==editingId);
+  selectedIds.delete(editingId);
   closeModal();
   render();
 });
@@ -1027,31 +1479,132 @@ function rowsToTsv_(rows){
     .join('\n');
 }
 
+/* ---------------- Объединённые ячейки: распространяем значение верхней ячейки на все строки диапазона (пункт 2 фидбека) ---------------- */
+function fillMergedCells_(ws, rows){
+  const merges = ws['!merges'] || [];
+  merges.forEach(m=>{
+    const srcVal = (rows[m.s.r] || [])[m.s.c];
+    if(srcVal === undefined || srcVal === '' || srcVal === null) return;
+    for(let r = m.s.r; r <= m.e.r; r++){
+      if(!rows[r]) continue;
+      for(let c = m.s.c; c <= m.e.c; c++){
+        if(rows[r][c] === undefined || rows[r][c] === ''){ rows[r][c] = srcVal; }
+      }
+    }
+  });
+}
+
+/* ---------------- Извлечение встроенных в Excel картинок (пункт 9 фидбека) ---------------- */
+/* Если картинку извлечь не получилось (нестандартный формат/архив) — просто не подставляем её,
+   а текстовая ссылка на скриншот (если она была в ячейке) остаётся как есть. */
+async function extractEmbeddedImages_(arrayBuffer){
+  const imageMap = {};
+  if(typeof JSZip === 'undefined') return imageMap;
+  try{
+    const zip = await JSZip.loadAsync(arrayBuffer);
+    const drawingFiles = Object.keys(zip.files).filter(f => /^xl\/drawings\/drawing\d+\.xml$/.test(f));
+    for(const drawingFile of drawingFiles){
+      const relsFile = drawingFile.replace('drawings/', 'drawings/_rels/') + '.rels';
+      const drawingXml = await zip.file(drawingFile).async('string');
+      const relsEntry = zip.file(relsFile);
+      const relsXml = relsEntry ? await relsEntry.async('string') : '';
+      const relMap = {};
+      const relRe = /<Relationship[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"/g;
+      let rm;
+      while((rm = relRe.exec(relsXml))) relMap[rm[1]] = rm[2];
+
+      const anchorRe = /<xdr:(oneCellAnchor|twoCellAnchor)>([\s\S]*?)<\/xdr:\1>/g;
+      let am;
+      while((am = anchorRe.exec(drawingXml))){
+        const block = am[2];
+        const rowMatch = block.match(/<xdr:from>[\s\S]*?<xdr:row>(\d+)<\/xdr:row>/);
+        const ridMatch = block.match(/r:embed="(rId\d+)"/);
+        if(!rowMatch || !ridMatch) continue;
+        const row = parseInt(rowMatch[1], 10);
+        const target = relMap[ridMatch[1]];
+        if(!target) continue;
+        const mediaPath = 'xl/' + target.replace(/^(\.\.\/)+/, '');
+        const mediaFile = zip.file(mediaPath);
+        if(!mediaFile) continue;
+        const base64 = await mediaFile.async('base64');
+        const ext = (mediaPath.split('.').pop() || '').toLowerCase();
+        const mime = ext === 'png' ? 'image/png' : (ext === 'gif' ? 'image/gif' : (ext === 'bmp' ? 'image/bmp' : 'image/jpeg'));
+        if(!imageMap[row]) imageMap[row] = 'data:' + mime + ';base64,' + base64;
+      }
+    }
+  }catch(e){ /* тихий фолбэк — картинки просто не подставятся */ }
+  return imageMap;
+}
+function compressDataUrlImage_(dataUrl){
+  return new Promise(resolve=>{
+    const img = new Image();
+    img.onload = () => {
+      const maxW = 760;
+      const scale = Math.min(1, maxW / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', 0.62));
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
+  });
+}
+
+const SCREENSHOT_COL_INDEX = 2; // позиция колонки «Скриншот» в ожидаемом порядке колонок
+
 $('#importFileZone').addEventListener('click', e=>{ if(e.target.id !== 'importFile') $('#importFile').click(); });
-$('#importFile').addEventListener('change', e=>{
+$('#importFile').addEventListener('change', async e=>{
   const file = e.target.files[0];
   if(!file) return;
   $('#importFilePlaceholder').textContent = 'Читаю файл «' + file.name + '»…';
 
   const isCsv = /\.csv$/i.test(file.name);
   const reader = new FileReader();
-  reader.onload = evt => {
+  reader.onload = async evt => {
     try{
-      let rows;
+      let rows, ws, arrayBuffer = null;
       if(isCsv){
         const wb = XLSX.read(evt.target.result, {type:'string'});
-        const ws = wb.Sheets[wb.SheetNames[0]];
+        ws = wb.Sheets[wb.SheetNames[0]];
         rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
       }else{
-        const wb = XLSX.read(evt.target.result, {type:'array'});
+        arrayBuffer = evt.target.result;
+        const wb = XLSX.read(arrayBuffer, {type:'array'});
         const sheetName = wb.SheetNames.includes('Правки') ? 'Правки' : wb.SheetNames[0];
-        const ws = wb.Sheets[sheetName];
+        ws = wb.Sheets[sheetName];
         rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
       }
+
+      // Объединённые ячейки — распространяем значение на все строки диапазона (для любых колонок)
+      fillMergedCells_(ws, rows);
+
+      let embeddedCount = 0;
+      if(!isCsv && arrayBuffer){
+        $('#importFilePlaceholder').textContent = 'Ищу встроенные скриншоты в файле…';
+        const imageMap = await extractEmbeddedImages_(arrayBuffer.slice(0));
+        for(const rowIdxStr of Object.keys(imageMap)){
+          const rowIdx = parseInt(rowIdxStr, 10);
+          if(!rows[rowIdx]) continue;
+          const cellVal = String(rows[rowIdx][SCREENSHOT_COL_INDEX] || '').trim();
+          // Не затираем существующую ссылку — подставляем картинку, только если ячейка со скриншотом пуста
+          if(cellVal) continue;
+          const compressed = await compressDataUrlImage_(imageMap[rowIdx]);
+          if(compressed){
+            rows[rowIdx][SCREENSHOT_COL_INDEX] = compressed;
+            embeddedCount++;
+          }
+        }
+      }
+
       const tsv = rowsToTsv_(rows);
       $('#importText').value = tsv;
       const realCount = tsv ? tsv.split('\n').length : 0;
-      $('#importFilePlaceholder').textContent = 'Загружено: «' + file.name + '» (' + realCount + ' строк с данными) — проверьте текст ниже и жмите «Импортировать»';
+      $('#importFilePlaceholder').textContent = 'Загружено: «' + file.name + '» (' + realCount + ' строк с данными' +
+        (embeddedCount ? ', встроенных скриншотов найдено: ' + embeddedCount : '') +
+        ') — проверьте текст ниже и жмите «Импортировать»';
     }catch(err){
       $('#importFilePlaceholder').textContent = 'Не удалось прочитать файл: ' + (err && err.message ? err.message : err);
     }
@@ -1095,6 +1648,7 @@ async function runImport(){
   let numCursor = bugs.reduce((m,b)=>Math.max(m,b.num||0),0);
   const bugObjects = rows.map(r => {
     numCursor += 1;
+    const isEmbeddedImg = /^data:image\//.test(r.screenshotUrl || '');
     return {
       id: 'b'+Date.now()+Math.random().toString(36).slice(2,7),
       num: numCursor,
@@ -1107,10 +1661,11 @@ async function runImport(){
       comment: r.comment,
       assignee: r.assignee,
       componentLink: r.componentLink,
-      statusWeblate: r.statusWeblate || STATUS_WEBLATE[0],
-      statusProd: r.statusProd || STATUS_PROD[0],
+      statusWeblate: r.statusWeblate || 'Не исправлено',
+      statusProd: r.statusProd || 'Не исправлено',
       zhannaComment: r.zhannaComment,
-      screenshotUrl: r.screenshotUrl,
+      screenshotUrl: isEmbeddedImg ? '' : r.screenshotUrl,
+      _pendingShotDataUrl: isEmbeddedImg ? r.screenshotUrl : null,
       createdAt: now,
       updatedAt: now,
     };
@@ -1121,6 +1676,14 @@ async function runImport(){
   for(let i = 0; i < bugObjects.length; i += BATCH_SIZE){
     const batch = bugObjects.slice(i, i + BATCH_SIZE);
     $('#importProgress').textContent = `Импортирую ${Math.min(i+BATCH_SIZE, bugObjects.length)} из ${bugObjects.length}…`;
+    // Встроенные скриншоты сначала грузим в хранилище (получаем реальную ссылку), затем сохраняем саму правку
+    await Promise.all(batch.map(async bug=>{
+      if(bug._pendingShotDataUrl){
+        const uploaded = await uploadScreenshot(bug.id, bug._pendingShotDataUrl);
+        if(uploaded) bug.screenshotUrl = uploaded;
+      }
+      delete bug._pendingShotDataUrl;
+    }));
     const results = await Promise.all(batch.map(bug => upsertBugRemote(bug)));
     results.forEach((saved, idx) => {
       if(saved){ bugs.push(batch[idx]); ok++; } else { fail++; }
@@ -1138,8 +1701,8 @@ async function runImport(){
 
 /* ---------------- CSV export ---------------- */
 function exportCsv(){
-  const headers = ['Язык','Раздел сайта','Подраздел','Тип ошибки','Как сейчас','Как должно быть','Пояснение к правке','Ответственный за компонент','Ссылка на компонент','Статус по Weblate','Статус по проду','Комментарии от Жанны','Дата'];
-  const rows = bugs.map(b=>[b.language,b.section,b.subsection,b.type,b.wrong,b.right,b.comment,b.assignee,b.componentLink,b.statusWeblate,b.statusProd,b.zhannaComment,formatDate(b.createdAt)]);
+  const headers = ['№','Язык','Раздел сайта','Подраздел','Тип ошибки','Как сейчас','Как должно быть','Пояснение к правке','Ответственный за компонент','Ссылка на основной компонент','Статус по Weblate','Статус по проду','Комментарии','Дата'];
+  const rows = bugs.map(b=>[b.num,b.language,b.section,b.subsection,b.type,b.wrong,b.right,b.comment,b.assignee,b.componentLink,b.statusWeblate,b.statusProd,b.zhannaComment,formatDate(b.createdAt)]);
   const csv = [headers, ...rows].map(r =>
     r.map(v => '"' + String(v||'').replace(/"/g,'""') + '"').join(',')
   ).join('\r\n');
@@ -1167,10 +1730,57 @@ function openLightbox(url){
 }
 $('#lightbox').addEventListener('click', ()=> $('#lightbox').classList.remove('open'));
 
+/* ---------------- Custom tooltip (вместо нативного title у браузера) ---------------- */
+(function initCustomTooltip(){
+  const tip = $('#customTooltip');
+  function position(el){
+    const r = el.getBoundingClientRect();
+    tip.style.left = '0px'; tip.style.top = '0px'; // сброс перед замером своей ширины
+    const tr = tip.getBoundingClientRect();
+    let top = r.top - tr.height - 8;
+    if(top < 8) top = r.bottom + 8; // не влезает сверху — показываем снизу
+    let left = r.left;
+    const maxLeft = window.innerWidth - tr.width - 8;
+    if(left > maxLeft) left = Math.max(8, maxLeft);
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+  }
+  document.addEventListener('mouseover', e=>{
+    const el = e.target.closest('[data-tooltip]');
+    if(!el) return;
+    const text = el.getAttribute('data-tooltip');
+    if(!text) return;
+    tip.textContent = text;
+    tip.style.display = 'block';
+    position(el);
+  });
+  document.addEventListener('mouseout', e=>{
+    const el = e.target.closest('[data-tooltip]');
+    if(!el || (e.relatedTarget && el.contains(e.relatedTarget))) return;
+    tip.style.display = 'none';
+  });
+  document.addEventListener('scroll', ()=>{ tip.style.display = 'none'; }, true);
+})();
+
+/* ---------------- Open issue by URL hash (#issue-44) ---------------- */
+function openFromHash(){
+  const m = location.hash.match(/^#issue-(\d+)$/);
+  if(!m) return;
+  const num = parseInt(m[1], 10);
+  const b = bugs.find(x => Number(x.num) === num);
+  if(b) openEdit(b.id);
+}
+
 /* ---------------- Boot ---------------- */
-initStaticSelects();
-if(!endpointConfigured) showSetupBanner();
-loadBugs();
+async function boot(){
+  await initLanguageConfig();
+  initStaticSelects();
+  if(!endpointConfigured) showSetupBanner();
+  await loadBugs();
+  openFromHash();
+}
+boot();
+window.addEventListener('hashchange', openFromHash);
 </script>
 </body>
 </html>
