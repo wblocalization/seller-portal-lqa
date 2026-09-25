@@ -356,7 +356,7 @@
     <select class="filter" id="fStatusProd"><option value="">Статус: прод — любой</option></select>
     <select class="filter" id="fAssignee"><option value="">Любой ответственный</option></select>
     <select class="filter" id="fZhanna">
-      <option value="">Комментарии…</option>
+      <option value="">Комментарий менеджера…</option>
       <option value="yes">Есть комментарии</option>
       <option value="no">Нет комментариев</option>
     </select>
@@ -406,7 +406,7 @@
           <th>Weblate</th>
           <th>Прод</th>
           <th>Пояснение</th>
-          <th>Комментарии</th>
+          <th>Комментарий менеджера</th>
           <th>Дата</th>
           <th></th>
         </tr>
@@ -482,8 +482,8 @@
       </div>
 
       <div class="field">
-        <label>Пояснение к правке</label>
-        <textarea id="fldComment" placeholder="Коротко: что не так и почему"></textarea>
+        <label>Пояснение к правке *</label>
+        <textarea id="fldComment" required placeholder="Коротко: что не так и почему"></textarea>
       </div>
 
       <div class="grid2">
@@ -509,7 +509,7 @@
       </div>
 
       <div class="field">
-        <label>Комментарии</label>
+        <label>Комментарий менеджера</label>
         <textarea id="fldZhanna" placeholder="Заполняет Жанна"></textarea>
       </div>
 
@@ -557,7 +557,7 @@
         <textarea id="importText" style="min-height:140px; font-family:'JetBrains Mono',monospace; font-size:12px;" placeholder="Вставьте сюда строки, скопированные из таблицы (Ctrl+C / Ctrl+V) — колонки через Tab, как в исходном файле"></textarea>
       </div>
       <p style="font-size:11.5px; color:var(--ink-soft); line-height:1.5; margin:8px 0 0;">
-        Ожидаемый порядок колонок: Раздел сайта → Подраздел → Скриншот (ссылка) → Тип ошибки → Как сейчас → Как должно быть → Пояснение к правке → Ответственный → Ссылка на основной компонент → Статус по Weblate → Статус по проду → Комментарии
+        Ожидаемый порядок колонок: Раздел сайта → Подраздел → Скриншот (ссылка) → Тип ошибки → Как сейчас → Как должно быть → Пояснение к правке → Ответственный → Ссылка на основной компонент → Статус по Weblate → Статус по проду → Комментарий менеджера
       </p>
     </div>
     <div class="modal-actions">
@@ -1384,7 +1384,7 @@ function clearFieldErrors(){
 function validateForm(){
   clearFieldErrors();
   let firstInvalid = null;
-  const requiredEls = ['#fldLanguage','#fldSection','#fldSubsection','#fldType','#fldWrong','#fldRight'];
+  const requiredEls = ['#fldLanguage','#fldSection','#fldSubsection','#fldType','#fldWrong','#fldRight','#fldComment'];
   requiredEls.forEach(sel=>{
     const el = $(sel);
     if(!el.value || !el.value.trim()){
@@ -1719,16 +1719,20 @@ async function runImport(){
 /* ---------------- CSV export ---------------- */
 function exportXlsx(list, filename){
   const data = list || bugs;
-  const headers = ['№','Язык','Раздел сайта','Подраздел','Тип ошибки','Как сейчас','Как должно быть','Пояснение к правке','Ответственный за компонент','Ссылка на основной компонент','Статус по Weblate','Статус по проду','Комментарии','Скриншот','Дата'];
+  const headers = ['№','Язык','Раздел сайта','Подраздел','Тип ошибки','Как сейчас','Как должно быть','Пояснение к правке','Ответственный за компонент','Ссылка на основной компонент','Статус по Weblate','Статус по проду','Комментарий менеджера','Скриншот','Дата'];
   const shotColIdx = headers.indexOf('Скриншот');
-  const rows = data.map(b=>[b.num,b.language,b.section,b.subsection,b.type,b.wrong,b.right,b.comment,b.assignee,b.componentLink,b.statusWeblate,b.statusProd,b.zhannaComment,b.screenshotUrl?'Открыть скриншот':'',formatDate(b.createdAt)]);
+  const rows = data.map(b=>[b.num,b.language,b.section,b.subsection,b.type,b.wrong,b.right,b.comment,b.assignee,b.componentLink,b.statusWeblate,b.statusProd,b.zhannaComment,'',formatDate(b.createdAt)]);
   const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-  ws['!cols'] = headers.map((h,i)=>({ wch: i===5||i===6||i===7 ? 40 : (i===0 ? 6 : 16) }));
-  // делаем ячейку со скриншотом кликабельной ссылкой (сам файл в xlsx не вшиваем — только ссылку на хранилище)
+  ws['!cols'] = headers.map((h,i)=>({ wch: i===5||i===6||i===7 ? 40 : (i===shotColIdx ? 13 : (i===0 ? 6 : 16)) }));
+  ws['!rows'] = [{ hpt: 20 }];
+  // Превью скриншота через =IMAGE(...) — рисуется только при открытии в Google Таблицах,
+  // в настоящем Microsoft Excel формула IMAGE() не поддерживается (см. чат с пользователем).
   data.forEach((b, i)=>{
     if(!b.screenshotUrl) return;
     const cellRef = XLSX.utils.encode_cell({ r: i+1, c: shotColIdx });
-    if(ws[cellRef]) ws[cellRef].l = { Target: b.screenshotUrl };
+    const safeUrl = b.screenshotUrl.replace(/"/g, '""');
+    ws[cellRef] = { t:'str', f: `IMAGE("${safeUrl}",4,60,90)` };
+    ws['!rows'][i+1] = { hpt: 68 };
   });
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Правки');
