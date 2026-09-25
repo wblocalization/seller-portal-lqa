@@ -332,8 +332,8 @@
     <div class="top-right">
       <button class="btn ghost small"><a href="https://seller-auth.wildberries.ru/" target="_blank">Ленд входа (инкогнито)</a></button>
       <button class="btn ghost small"><a href="https://seller.wildberries.ru/" target="_blank">Тестовый ЛК продавца</a></button>
-      <button class="btn ghost small" id="sheetLinkBtn" style="display:none;"><a id="sheetLinkAnchor" href="#" target="_blank">Google-таблица</a></button>
       <button class="btn ghost small" id="importBtn">Импорт</button>
+      <button class="btn ghost small" id="exportBtn">Экспорт в Excel</button>
       <button class="btn ghost small" id="settingsBtn">⚙ Языки и разделы</button>
       <button class="btn" id="newBugBtn">+ Новая правка</button>
     </div>
@@ -831,11 +831,6 @@ function initStaticSelects(){
   fillSelect($('#importLanguage'), getLanguages(), false);
   fillSelect($('#bulkStatusWeblate'), STATUS_WEBLATE, 'Weblate — не менять');
   fillSelect($('#bulkStatusProd'), STATUS_PROD, 'Прод — не менять');
-
-  if(/^https?:\/\//.test(SHEET_LINK)){
-    $('#sheetLinkAnchor').href = SHEET_LINK;
-    $('#sheetLinkBtn').style.display = 'inline-flex';
-  }
 }
 function updateTypeHint(){
   const val = $('#fldType').value;
@@ -1722,7 +1717,7 @@ function exportXlsx(list, filename){
   const shotColIdx = headers.indexOf('Скриншот');
   const rows = data.map(b=>[b.num,b.language,b.section,b.subsection,b.type,b.wrong,b.right,b.comment,b.assignee,b.componentLink,b.statusWeblate,b.statusProd,b.zhannaComment,'',formatDate(b.createdAt)]);
   const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-  ws['!cols'] = headers.map((h,i)=>({ wch: i===5||i===6||i===7 ? 40 : (i===shotColIdx ? 13 : (i===0 ? 6 : 16)) }));
+  ws['!cols'] = headers.map((h,i)=>({ wch: i===5||i===6||i===7 ? 40 : (i===shotColIdx ? 30 : (i===0 ? 6 : 16)) }));
   ws['!rows'] = [{ hpt: 20 }];
   // Превью скриншота через =IMAGE(...) — рисуется только при открытии в Google Таблицах,
   // в настоящем Microsoft Excel формула IMAGE() не поддерживается (см. чат с пользователем).
@@ -1730,8 +1725,8 @@ function exportXlsx(list, filename){
     if(!b.screenshotUrl) return;
     const cellRef = XLSX.utils.encode_cell({ r: i+1, c: shotColIdx });
     const safeUrl = b.screenshotUrl.replace(/"/g, '""');
-    ws[cellRef] = { t:'str', f: `IMAGE("${safeUrl}",4,60,90)` };
-    ws['!rows'][i+1] = { hpt: 68 };
+    ws[cellRef] = { t:'str', f: `IMAGE("${safeUrl}",4,160,220)` };
+    ws['!rows'][i+1] = { hpt: 130 };
   });
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Правки');
