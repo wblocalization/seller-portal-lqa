@@ -360,6 +360,7 @@
       <option value="yes">Есть комментарии</option>
       <option value="no">Нет комментариев</option>
     </select>
+    <select class="filter" id="fMonth"><option value="">Любой месяц</option></select>
     <select class="filter" id="fSort">
       <option value="new">Сначала новые</option>
       <option value="old">Сначала старые</option>
@@ -371,6 +372,7 @@
     <select class="filter" id="bulkStatusWeblate"></select>
     <select class="filter" id="bulkStatusProd"></select>
     <button type="button" class="btn small" id="bulkApplyBtn">Применить статус</button>
+    <button type="button" class="btn ghost small" id="bulkExportBtn">Экспорт в CSV</button>
     <button type="button" class="btn danger small" id="bulkDeleteBtn">Удалить выбранные</button>
     <button type="button" class="btn ghost small" id="bulkClearBtn">Снять выделение</button>
   </div>
@@ -963,10 +965,12 @@ function renderPaginationBar(totalItems, totalPages){
 function render(){
   renderStats();
   refreshAssigneeFilter();
+  refreshMonthFilter();
   const q = $('#searchInput').value.trim().toLowerCase();
   const fl = $('#fLanguage').value, fsec = $('#fSection').value, ft = $('#fType').value,
         fsw = $('#fStatusWeblate').value, fsp = $('#fStatusProd').value, fa = $('#fAssignee').value,
         fz = $('#fZhanna').value;
+  const fMonth = $('#fMonth').value; // YYYY-MM или ''
   const qIsNum = /^\d+$/.test(q);
 
   const filtered = bugs.filter(b=>{
@@ -978,6 +982,7 @@ function render(){
     if(fa && b.assignee !== fa) return false;
     if(fz === 'yes' && !(b.zhannaComment||'').trim()) return false;
     if(fz === 'no' && (b.zhannaComment||'').trim()) return false;
+    if(fMonth && (b.createdAt||'').slice(0,7) !== fMonth) return false;
     if(q){
       if(qIsNum){
         if(String(b.num||'') !== q) return false;
@@ -1092,6 +1097,17 @@ function refreshAssigneeFilter(){
   const names = [...new Set(bugs.map(b=>b.assignee).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru'));
   $('#fAssignee').innerHTML = '<option value="">Любой ответственный</option>' + names.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
   if(names.includes(current)) $('#fAssignee').value = current;
+}
+const MONTH_NAMES_RU = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+function refreshMonthFilter(){
+  const current = $('#fMonth').value;
+  const months = [...new Set(bugs.map(b => (b.createdAt||'').slice(0,7)).filter(Boolean))].sort().reverse();
+  $('#fMonth').innerHTML = '<option value="">Любой месяц</option>' + months.map(m=>{
+    const [y, mo] = m.split('-');
+    const label = MONTH_NAMES_RU[parseInt(mo,10)-1] + ' ' + y;
+    return `<option value="${m}">${label}</option>`;
+  }).join('');
+  if(months.includes(current)) $('#fMonth').value = current;
 }
 
 function renderStats(){
@@ -1263,7 +1279,7 @@ $('#shotRemove').addEventListener('click', ()=>{ pendingShot=null; shotChanged=t
 
 /* ---------------- Events ---------------- */
 $('#newBugBtn').addEventListener('click', openNew);
-$('#exportBtn').addEventListener('click', exportCsv);
+$('#exportBtn').addEventListener('click', ()=> exportCsv());
 $('#importBtn').addEventListener('click', openImportModal);
 $('#settingsBtn').addEventListener('click', openSettingsModal);
 $('#closeSettingsModal').addEventListener('click', closeSettingsModal);
@@ -1287,7 +1303,7 @@ $('#cancelBtn').addEventListener('click', closeModal);
 $('#overlay').addEventListener('click', e=>{ if(e.target.id==='overlay') closeModal(); });
 $('#fldType').addEventListener('change', updateTypeHint);
 $('#fldLanguage').addEventListener('change', ()=>updateSectionOptions());
-['#searchInput','#fLanguage','#fSection','#fType','#fStatusWeblate','#fStatusProd','#fAssignee','#fZhanna','#fSort'].forEach(sel=>{
+['#searchInput','#fLanguage','#fSection','#fType','#fStatusWeblate','#fStatusProd','#fAssignee','#fZhanna','#fMonth','#fSort'].forEach(sel=>{
   $(sel).addEventListener('input', onFilterChange);
   $(sel).addEventListener('change', onFilterChange);
 });
@@ -1351,6 +1367,7 @@ async function bulkDelete(){
   render();
 }
 $('#bulkApplyBtn').addEventListener('click', bulkApplyStatus);
+$('#bulkExportBtn').addEventListener('click', exportSelectedCsv);
 $('#bulkDeleteBtn').addEventListener('click', bulkDelete);
 
 /* ---------------- Пагинация ---------------- */
@@ -1700,18 +1717,26 @@ async function runImport(){
 }
 
 /* ---------------- CSV export ---------------- */
-function exportCsv(){
+function exportCsv(list, filename){
+  const data = list || bugs;
   const headers = ['№','Язык','Раздел сайта','Подраздел','Тип ошибки','Как сейчас','Как должно быть','Пояснение к правке','Ответственный за компонент','Ссылка на основной компонент','Статус по Weblate','Статус по проду','Комментарии','Дата'];
-  const rows = bugs.map(b=>[b.num,b.language,b.section,b.subsection,b.type,b.wrong,b.right,b.comment,b.assignee,b.componentLink,b.statusWeblate,b.statusProd,b.zhannaComment,formatDate(b.createdAt)]);
+  const rows = data.map(b=>[b.num,b.language,b.section,b.subsection,b.type,b.wrong,b.right,b.comment,b.assignee,b.componentLink,b.statusWeblate,b.statusProd,b.zhannaComment,formatDate(b.createdAt)]);
   const csv = [headers, ...rows].map(r =>
     r.map(v => '"' + String(v||'').replace(/"/g,'""') + '"').join(',')
   ).join('\r\n');
   const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = 'seller-portal-lqa.csv';
+  a.href = url; a.download = filename || 'seller-portal-lqa.csv';
   a.click();
   URL.revokeObjectURL(url);
+}
+function exportSelectedCsv(){
+  const ids = new Set(selectedIds);
+  if(!ids.size) return;
+  const selectedBugs = bugs.filter(b => ids.has(b.id));
+  exportCsv(selectedBugs, `seller-portal-lqa-выбранные-${selectedBugs.length}.csv`);
+  showToast(`Экспортировано ${selectedBugs.length} правок`);
 }
 
 /* ---------------- Toast ---------------- */
