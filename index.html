@@ -332,6 +332,7 @@
     <div class="top-right">
       <button class="btn ghost small"><a href="https://seller-auth.wildberries.ru/" target="_blank">Ленд входа (инкогнито)</a></button>
       <button class="btn ghost small"><a href="https://seller.wildberries.ru/" target="_blank">Тестовый ЛК продавца</a></button>
+      <button class="btn ghost small" title="Откроется окно Google: войдите в аккаунт и выдайте разрешения (Review permissions → Allow), затем обновите эту страницу"><a id="authLink" href="#" target="_blank">Не грузится? Выдать доступ</a></button>
       <button class="btn ghost small" id="importBtn">Импорт</button>
       <button class="btn ghost small" id="exportBtn">Экспорт в Excel</button>
       <button class="btn ghost small" id="settingsBtn">⚙ Языки и разделы</button>
@@ -656,6 +657,7 @@ let bugs = [];
 // использовать endpoint от трекера магазина нельзя, там другие колонки.
 const SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyJm1lISKJ0dheJMPwSqkXM_CP_xyvHeXJ7F7ad_YYGdxAPa-j1TlxD1Gbd8BBoOns/exec';
 const endpointConfigured = /^https:\/\//.test(SHEETS_ENDPOINT);
+document.getElementById('authLink').href = SHEETS_ENDPOINT;
 
 // Ссылка на саму Google-таблицу (для кнопки "Google-таблица" в шапке) — та же таблица,
 // к которой подключён Apps Script выше. Вставьте, когда будет готова.
